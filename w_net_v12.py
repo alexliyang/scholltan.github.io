@@ -155,6 +155,33 @@ class DSSIM(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0]
 
+def DSSIM(y_true, y_pred):
+    # y_true = inputs[0]
+    # y_pred = inputs[1]
+    # print(y_true.shape)
+
+    patches_true = tf.extract_image_patches(y_true, [1, 5, 5, 1], [1, 2, 2, 1], [1, 1, 1, 1], "SAME")
+    patches_pred = tf.extract_image_patches(y_pred, [1, 5, 5, 1], [1, 2, 2, 1], [1, 1, 1, 1], "SAME")
+    eps = 1e-9
+    u_true = K.mean(patches_true, axis=3)
+    u_pred = K.mean(patches_pred, axis=3)
+        
+    var_true = K.var(patches_true, axis=3)
+    var_pred = K.var(patches_pred, axis=3)
+        
+    covar_true_pred = K.mean(patches_true * patches_pred, axis=3) - u_true * u_pred
+        
+    std_true = K.sqrt(var_true+eps)
+    std_pred = K.sqrt(var_pred+eps)
+        
+    c1 = 0.01 ** 2
+    c2 = 0.03 ** 2
+    ssim = (2 * u_true * u_pred + c1) * (2 * std_pred * std_true + c2)
+    denom = (K.sqrt(u_true+eps) + K.sqrt(u_pred+eps) + c1) * (var_pred + var_true + c2)
+    ssim /= denom
+    ssim = tf.where(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
+    return K.mean(((1.0 - ssim) / 2))
+
 
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
 
@@ -288,8 +315,8 @@ def get_unet(img_rows, img_cols, lr=1e-4):
     weighted_gradient_right = Lambda(lambda x: x[0] * (1 - x[1]))([depth_right_gradient, image_right_gradient])
 
     #compute ssim index
-    left_ssim = DSSIM()([left_input_image,left_reconstruct_im])
-    right_ssim = DSSIM()([right_input_image,right_reconstruct_im])
+    left_ssim = DSSIM(left_input_image,left_reconstruct_im)
+    right_ssim = DSSIM(right_input_image,right_reconstruct_im)
 
     model = Model(inputs=[inputs], outputs=[output, weighted_gradient_left, weighted_gradient_right, left_ssim, right_ssim])
 
