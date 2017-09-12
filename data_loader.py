@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, batch_size=16, shuffle=True):
+def get_data_generators(train_folder, val_folder, img_rows=128, img_cols=224, batch_size=16, shuffle=True):
 
     train_datagen = ImageDataGenerator(rescale=1. / 255)
     val_datagen = ImageDataGenerator(rescale=1. / 255)
@@ -18,7 +18,6 @@ def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, ba
         seed=10,
         shuffle=shuffle,
         classes=None,
-        #color_mode='grayscale',
         class_mode=None)
 
     train_generator2 = train_datagen.flow_from_directory(
@@ -28,7 +27,6 @@ def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, ba
         seed=10,
         shuffle=shuffle,
         classes=None,
-        #color_mode='grayscale',
         class_mode=None)
 
     validation_generator1 = val_datagen.flow_from_directory(
@@ -38,7 +36,6 @@ def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, ba
         seed=10,
         shuffle=shuffle,
         classes=None,
-        #color_mode='grayscale',
         class_mode=None)
 
     validation_generator2 = val_datagen.flow_from_directory(
@@ -48,7 +45,6 @@ def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, ba
         seed=10,
         shuffle=shuffle,
         classes=None,
-        #color_mode='grayscale',
         class_mode=None)
 
     def train_generator_func():
@@ -56,14 +52,14 @@ def get_data_generators(train_folder, val_folder, img_rows=224, img_cols=376, ba
             X = train_generator1.__next__()
             Y1 = train_generator2.__next__()
             yield X, [Y1, np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4)),
-                      np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4))]
+                      np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4)), np.zeros(1), np.zeros(1)]
 
     def val_generator_func():
         while True:
             X = validation_generator1.__next__()
             Y1 = validation_generator2.__next__()
             yield X, [Y1, np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4)),
-                      np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4))]
+                      np.zeros(shape=(Y1.shape[0], img_rows - 4, img_cols - 4)), np.zeros(1), np.zeros(1)]
 
     train_generator = train_generator_func()
     val_generator = val_generator_func()
@@ -81,5 +77,3 @@ def clean_directory(path):
         except Exception as e:
             print('removing ' + os.path.join(path, img_file))
             os.remove(os.path.join(path, img_file))
-
-
