@@ -1,22 +1,20 @@
-from w_net_v11 import get_unet
+from w_net_v12 import get_unet
 from data_loader import get_data_generators
 from keras.callbacks import TensorBoard, ModelCheckpoint, ProgbarLogger
 import os
-import tensorflow as tf
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 def main(args):
-    img_rows = 224
-    img_cols = 376
+    img_rows = 192
+    img_cols = 336
     batch_size = 6
     n_epochs = 100
     models_folder = 'models'
     model_name = 'w_net_V12'
     model_path = os.path.join(models_folder, model_name)
 
-    train_generator, val_generator, training_samples, val_samples = get_data_generators(train_folder='F:\opendata\stere_pairs\tansq\train',
-                                                                                        val_folder='F:\opendata\stere_pairs\tansq\validation',
+    train_generator, val_generator, training_samples, val_samples = get_data_generators(train_folder='train',
+                                                                                        val_folder='validation',
                                                                                         img_rows=img_rows,
                                                                                         img_cols=img_cols,
                                                                                         batch_size=batch_size)
@@ -37,8 +35,6 @@ def main(args):
 
         print('epoch {} \n'.format(epoch))
 
-        #filepath="weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
-
         model_path = os.path.join(models_folder, model_name + '_epoch_{}'.format(epoch))
         w_net.fit_generator(train_generator,
                             steps_per_epoch=training_samples // batch_size,
@@ -48,9 +44,9 @@ def main(args):
                             verbose=1,
                             callbacks=[TensorBoard(log_dir='/tmp/deepdepth'),
                                        ModelCheckpoint(model_path + '.h5', monitor='loss',
-                                                       verbose=1,
+                                                       verbose=0,
                                                        save_best_only=False,
-                                                       save_weights_only=False,
+                                                       save_weights_only=True,
                                                        mode='auto', period=1)])
 
 if __name__ == '__main__':
