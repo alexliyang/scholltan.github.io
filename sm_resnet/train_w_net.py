@@ -1,26 +1,35 @@
 from u_net_resnet_v1 import get_unet
 from data_loader import get_data_generators
-from keras.callbacks import TensorBoard, ModelCheckpoint, ProgbarLogger
+from keras.callbacks import TensorBoard, ModelCheckpoint, ProgbarLogger, LearningRateScheduler
 import os
 import tensorflow as tf
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.9
+config.gpu_options.per_process_gpu_memory_fraction = 0.95
 set_session(tf.Session(config=config))
 
-from keras.callbacks import LearningRateScheduler
  
 
 # learning rate schedule
 def step_decay(epoch):
-	initial_lrate = 0.001
-	drop = 0.6
-	epochs_drop = 5.0
+	initial_lrate = 0.1
+	drop = 0.8
+	epochs_drop = 1.0
 	lrate = initial_lrate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
 	return lrate
 	
 lrate = LearningRateScheduler(step_decay)
+
+'''
+class MyCallback(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        lr = self.model.optimizer.lr
+        decay = self.model.optimizer.decay
+        iterations = self.model.optimizer.iterations
+        lr_with_decay = lr / (1. + decay * K.cast(iterations, K.dtype(decay)))
+        print(K.eval(lr_with_decay))
+'''
 
 
 def main(args):
